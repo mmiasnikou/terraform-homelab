@@ -11,13 +11,13 @@ Personal homelab infrastructure as code.
 
 ## Structure
 
-\`\`\`
+```
 .
 ├── docker/         # Terraform configs for Docker workloads
 ├── proxmox/        # VM provisioning on Proxmox
 ├── ansible/        # Configuration playbooks
 └── README.md
-\`\`\`
+```
 
 ## Status
 

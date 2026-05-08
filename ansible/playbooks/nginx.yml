@@ -1,0 +1,38 @@
+---
+- name: Install and configure nginx
+  hosts: lab_vms
+  become: true
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Deploy custom index.html
+      copy:
+        content: |
+          <!DOCTYPE html>
+          <html>
+          <head><title>Lab VM</title></head>
+          <body>
+            <h1>Hello from {{ ansible_hostname }}</h1>
+            <p>Configured by Ansible, provisioned by Terraform.</p>
+            <p>IP: {{ ansible_default_ipv4.address }}</p>
+          </body>
+          </html>
+        dest: /var/www/html/index.nginx-debian.html
+        owner: www-data
+        group: www-data
+        mode: '0644'
+
+    - name: Ensure nginx is started and enabled
+      systemd:
+        name: nginx
+        state: started
+        enabled: yes

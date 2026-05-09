@@ -1,0 +1,10 @@
+---
+forgejo_version: "10"
+forgejo_install_dir: /opt/forgejo
+forgejo_data_dir: /opt/forgejo/data
+forgejo_http_port: 3000
+forgejo_ssh_port: 222
+forgejo_admin_user: mik
+forgejo_admin_email: "{{ forgejo_admin_user }}@lab.local"
+forgejo_backup_dir: /opt/forgejo/backups
+forgejo_backup_retention_days: 7

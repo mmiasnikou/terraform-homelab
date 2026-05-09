@@ -5,6 +5,10 @@ cd ../proxmox
 terraform output -json vm_ips | jq -r '
   "[lab_vms]\n" +
   ([to_entries[] | "\(.key) ansible_host=\(.value)"] | join("\n")) +
+  "\n\n[forgejo]\n" +
+  ([to_entries[] | select(.key == "web-01") | "\(.key) ansible_host=\(.value)"] | join("\n")) +
+  "\n\n[webservers]\n" +
+  ([to_entries[] | select(.key == "web-02") | "\(.key) ansible_host=\(.value)"] | join("\n")) +
   "\n\n[lab_vms:vars]\n" +
   "ansible_user=mik\n" +
   "ansible_ssh_private_key_file=~/.ssh/id_ed25519\n" +

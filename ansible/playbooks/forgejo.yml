@@ -1,0 +1,8 @@
+---
+- name: Deploy Forgejo on dedicated host
+  hosts: forgejo
+  become: true
+  gather_facts: yes
+
+  roles:
+    - forgejo

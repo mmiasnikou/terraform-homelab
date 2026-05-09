@@ -1,0 +1,20 @@
+services:
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:{{ forgejo_version }}
+    container_name: forgejo
+    restart: always
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - FORGEJO__server__DOMAIN={{ ansible_default_ipv4.address }}
+      - FORGEJO__server__ROOT_URL=http://{{ ansible_default_ipv4.address }}:{{ forgejo_http_port }}/
+      - FORGEJO__server__SSH_PORT={{ forgejo_ssh_port }}
+      - FORGEJO__server__SSH_LISTEN_PORT=22
+      - FORGEJO__database__DB_TYPE=sqlite3
+    volumes:
+      - {{ forgejo_data_dir }}:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "{{ forgejo_http_port }}:3000"
+      - "{{ forgejo_ssh_port }}:22"

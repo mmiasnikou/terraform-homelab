@@ -1,0 +1,34 @@
+#!/bin/bash
+set -euo pipefail
+
+BACKUP_DIR="{{ forgejo_backup_dir }}"
+RETENTION_DAYS={{ forgejo_backup_retention_days }}
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+LOGFILE="$BACKUP_DIR/backup.log"
+
+mkdir -p "$BACKUP_DIR"
+
+echo "[$(date)] === Starting Forgejo backup ===" >> "$LOGFILE"
+
+# Запуск forgejo dump внутри контейнера
+docker exec -u git forgejo /usr/local/bin/forgejo dump \
+  --type tar.gz \
+  --file /tmp/forgejo-backup.tar.gz \
+  --tempdir /tmp \
+  >> "$LOGFILE" 2>&1
+
+# Копируем архив на хост и переименовываем
+docker cp forgejo:/tmp/forgejo-backup.tar.gz "$BACKUP_DIR/forgejo-${TIMESTAMP}.tar.gz"
+docker exec forgejo rm /tmp/forgejo-backup.tar.gz
+
+# Удаляем старые бэкапы
+find "$BACKUP_DIR" -name "forgejo-*.tar.gz" -mtime +${RETENTION_DAYS} -delete
+
+# Ротация лога
+if [ -f "$LOGFILE" ] && [ "$(stat -c%s "$LOGFILE")" -gt 1048576 ]; then
+    tail -n 100 "$LOGFILE" > "${LOGFILE}.new"
+    mv "${LOGFILE}.new" "$LOGFILE"
+fi
+
+SIZE=$(du -h "$BACKUP_DIR/forgejo-${TIMESTAMP}.tar.gz" | cut -f1)
+echo "[$(date)] === Backup complete: forgejo-${TIMESTAMP}.tar.gz ($SIZE) ===" >> "$LOGFILE"

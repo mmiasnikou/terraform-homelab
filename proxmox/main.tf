@@ -41,7 +41,7 @@ resource "proxmox_virtual_environment_vm" "vm" {
   }
 
   network_device {
-    bridge = "vmbr0"
+    bridge      = "vmbr0"
     mac_address = format("BC:24:11:%02X:%02X:%02X", index(keys(var.vms), each.key) + 1, 0, 0)
 
   }

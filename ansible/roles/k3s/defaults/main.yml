@@ -1,0 +1,3 @@
+---
+k3s_version: "v1.31.4+k3s1"
+k3s_install_url: "https://get.k3s.io"

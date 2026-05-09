@@ -8,14 +8,18 @@ on:
 
 jobs:
   fmt-and-validate:
-    runs-on: terraform
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.0"
+
       - name: Terraform fmt
         run: terraform fmt -check -recursive
-        continue-on-error: false
 
       - name: Terraform init (no backend)
         run: |

@@ -2,13 +2,14 @@ services:
   runner:
     image: {{ forgejo_runner_image }}
     container_name: forgejo-runner
+    entrypoint: ["/bin/forgejo-runner", "daemon"]
     restart: always
     user: "1000:1000"
     environment:
       - FORGEJO_INSTANCE_URL={{ forgejo_runner_url }}
+      - DOCKER_HOST=tcp://docker-in-docker:2375
     volumes:
       - {{ forgejo_runner_data_dir }}:/data
-      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - docker-in-docker
 

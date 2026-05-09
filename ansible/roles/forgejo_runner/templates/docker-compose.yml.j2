@@ -1,0 +1,23 @@
+services:
+  runner:
+    image: {{ forgejo_runner_image }}
+    container_name: forgejo-runner
+    restart: always
+    user: "1000:1000"
+    environment:
+      - FORGEJO_INSTANCE_URL={{ forgejo_runner_url }}
+    volumes:
+      - {{ forgejo_runner_data_dir }}:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - docker-in-docker
+
+  docker-in-docker:
+    image: docker:dind
+    container_name: forgejo-runner-dind
+    restart: always
+    privileged: true
+    environment:
+      - DOCKER_TLS_CERTDIR=
+    volumes:
+      - {{ forgejo_runner_data_dir }}/dind:/var/lib/docker

@@ -1,0 +1,41 @@
+---
+- name: Fail if runner token is not set
+  fail:
+    msg: "Variable forgejo_runner_token is required. Set it via -e or in vault."
+  when: forgejo_runner_token == ""
+
+- name: Create runner install dir
+  file:
+    path: "{{ forgejo_runner_install_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Create runner data dir
+  file:
+    path: "{{ forgejo_runner_data_dir }}"
+    state: directory
+    owner: "1000"
+    group: "1000"
+    mode: '0755'
+
+- name: Deploy registration script
+  template:
+    src: register.sh.j2
+    dest: "{{ forgejo_runner_install_dir }}/register.sh"
+    mode: '0700'
+
+- name: Register runner (one-time)
+  command: "{{ forgejo_runner_install_dir }}/register.sh"
+  args:
+    creates: "{{ forgejo_runner_data_dir }}/.runner"
+
+- name: Deploy runner docker-compose.yml
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ forgejo_runner_install_dir }}/docker-compose.yml"
+    mode: '0644'
+
+- name: Start runner via docker compose
+  community.docker.docker_compose_v2:
+    project_src: "{{ forgejo_runner_install_dir }}"
+    state: present

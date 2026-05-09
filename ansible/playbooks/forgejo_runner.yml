@@ -1,0 +1,8 @@
+---
+- name: Deploy Forgejo Runner
+  hosts: forgejo
+  become: true
+  gather_facts: yes
+
+  roles:
+    - forgejo_runner

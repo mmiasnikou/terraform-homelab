@@ -11,6 +11,8 @@ services:
       - FORGEJO__server__SSH_PORT={{ forgejo_ssh_port }}
       - FORGEJO__server__SSH_LISTEN_PORT=22
       - FORGEJO__database__DB_TYPE=sqlite3
+      - FORGEJO__actions__ENABLED=true
+      - FORGEJO__actions__DEFAULT_ACTIONS_URL=https://code.forgejo.org
     volumes:
       - {{ forgejo_data_dir }}:/data
       - /etc/timezone:/etc/timezone:ro

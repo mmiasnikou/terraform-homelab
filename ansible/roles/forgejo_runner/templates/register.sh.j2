@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euo pipefail
+
+if [ -f "{{ forgejo_runner_data_dir }}/.runner" ]; then
+    echo "Runner already registered, skipping"
+    exit 0
+fi
+
+docker run --rm \
+    -v {{ forgejo_runner_data_dir }}:/data \
+    {{ forgejo_runner_image }} \
+    forgejo-runner register \
+        --no-interactive \
+        --instance "{{ forgejo_runner_url }}" \
+        --token "{{ forgejo_runner_token }}" \
+        --name "{{ forgejo_runner_name }}" \
+        --labels "{{ forgejo_runner_labels }}"

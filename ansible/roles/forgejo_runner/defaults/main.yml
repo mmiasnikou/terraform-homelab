@@ -1,0 +1,8 @@
+---
+forgejo_runner_install_dir: /opt/forgejo-runner
+forgejo_runner_data_dir: /opt/forgejo-runner/data
+forgejo_runner_image: "data.forgejo.org/forgejo/runner:7.0.0"
+forgejo_runner_token: ""  # заполнится из переменных
+forgejo_runner_url: "http://{{ ansible_default_ipv4.address }}:3000"
+forgejo_runner_name: "lab-runner-01"
+forgejo_runner_labels: "ubuntu-latest:docker://node:20-bookworm,terraform:docker://hashicorp/terraform:1.10"

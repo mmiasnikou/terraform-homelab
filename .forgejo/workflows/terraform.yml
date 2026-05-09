@@ -1,0 +1,40 @@
+name: Terraform Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  fmt-and-validate:
+    runs-on: terraform
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive
+        continue-on-error: false
+
+      - name: Terraform init (no backend)
+        run: |
+          for dir in proxmox docker; do
+            if [ -d "$dir" ]; then
+              echo "=== Init in $dir ==="
+              cd "$dir"
+              terraform init -backend=false
+              cd ..
+            fi
+          done
+
+      - name: Terraform validate
+        run: |
+          for dir in proxmox docker; do
+            if [ -d "$dir" ]; then
+              echo "=== Validate in $dir ==="
+              cd "$dir"
+              terraform validate
+              cd ..
+            fi
+          done

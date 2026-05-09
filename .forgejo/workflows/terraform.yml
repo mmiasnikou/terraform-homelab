@@ -15,7 +15,7 @@ jobs:
 
       - name: Setup Terraform
         uses: https://github.com/hashicorp/setup-terraform@v3
-         with:
+        with:
           terraform_version: "1.10.0"
 
       - name: Terraform fmt

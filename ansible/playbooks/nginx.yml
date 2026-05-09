@@ -21,7 +21,7 @@
           <html>
           <head><title>Lab VM</title></head>
           <body>
-            <h1>Hello from {{ ansible_hostname }}</h1>
+            <h1>Hello from {{ inventory_hostname }}</h1>
             <p>Configured by Ansible, provisioned by Terraform.</p>
             <p>IP: {{ ansible_default_ipv4.address }}</p>
           </body>

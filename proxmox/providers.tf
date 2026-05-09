@@ -10,9 +10,10 @@ terraform {
 }
 
 provider "proxmox" {
-  endpoint  = "https://192.168.188.130:8006/"
+  endpoint  = var.proxmox_endpoint
   api_token = var.proxmox_api_token
-  insecure  = true   # самоподписанный сертификат
+  insecure  = true
+
   ssh {
     agent    = false
     username = "root"

@@ -1,19 +1,21 @@
-resource "proxmox_virtual_environment_vm" "test_vm" {
-  name      = "tf-test-01"
-  node_name = "pve"
+resource "proxmox_virtual_environment_vm" "vm" {
+  for_each = var.vms
+
+  name      = each.key
+  node_name = var.proxmox_node
   pool_id   = "lab"
 
   clone {
-    vm_id = 9000
+    vm_id = var.template_id
     full  = true
   }
 
   cpu {
-    cores = 2
+    cores = each.value.cores
   }
 
   memory {
-    dedicated = 2048
+    dedicated = each.value.memory
   }
 
   agent {
@@ -23,7 +25,7 @@ resource "proxmox_virtual_environment_vm" "test_vm" {
   disk {
     datastore_id = "local-lvm"
     interface    = "scsi0"
-    size         = 20
+    size         = each.value.disk
   }
 
   initialization {
@@ -40,9 +42,7 @@ resource "proxmox_virtual_environment_vm" "test_vm" {
 
   network_device {
     bridge = "vmbr0"
-  }
-}
+    mac_address = format("BC:24:11:%02X:%02X:%02X", index(keys(var.vms), each.key) + 1, 0, 0)
 
-output "vm_ip" {
-  value = proxmox_virtual_environment_vm.test_vm.ipv4_addresses
+  }
 }

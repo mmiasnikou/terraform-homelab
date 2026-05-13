@@ -1,0 +1,28 @@
+# Loki в single-binary режиме (как раз для homelab)
+loki:
+  enabled: true
+  isDefault: false   # Grafana datasource не первый по умолчанию (первый — Prometheus от kps)
+  persistence:
+    enabled: true
+    storageClassName: local-path
+    size: 5Gi
+  config:
+    table_manager:
+      retention_deletes_enabled: true
+      retention_period: 168h  # 7 дней, иначе диск распухнет
+
+# Promtail — DaemonSet, тянет логи со всех нод
+promtail:
+  enabled: true
+
+# Эти три выключим — они дублируют то, что уже есть в kube-prometheus-stack
+grafana:
+  enabled: false
+prometheus:
+  enabled: false
+filebeat:
+  enabled: false
+fluent-bit:
+  enabled: false
+logstash:
+  enabled: false

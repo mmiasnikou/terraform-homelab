@@ -1,0 +1,23 @@
+# Root CA сертификат. Подписан selfsigned-bootstrap.
+# Это и есть наш корневой сертификат на 10 лет.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: homelab-root-ca
+  namespace: cert-manager
+spec:
+  isCA: true
+  commonName: homelab-root-ca
+  subject:
+    organizations:
+      - Mik Homelab
+  duration: 87600h    # 10 лет
+  renewBefore: 720h   # обновлять за 30 дней до конца
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  secretName: homelab-root-ca-secret
+  issuerRef:
+    name: selfsigned-bootstrap
+    kind: ClusterIssuer
+    group: cert-manager.io

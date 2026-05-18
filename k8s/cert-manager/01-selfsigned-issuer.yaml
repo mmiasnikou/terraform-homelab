@@ -1,0 +1,8 @@
+# Временный ClusterIssuer — выпускает selfsigned сертификаты.
+# Нужен только чтобы один раз выпустить наш Root CA.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-bootstrap
+spec:
+  selfSigned: {}

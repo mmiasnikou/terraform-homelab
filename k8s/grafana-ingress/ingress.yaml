@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana
+  namespace: monitoring
+  annotations:
+    # cert-manager увидит эту аннотацию и автоматически выпустит сертификат
+    # для всех hosts из tls секции ниже, используя ClusterIssuer "homelab-ca"
+    cert-manager.io/cluster-issuer: homelab-ca
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - grafana.k3s.lab
+      secretName: grafana-tls    # сюда cert-manager положит выпущенный cert
+  rules:
+    - host: grafana.k3s.lab
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kps-grafana
+                port:
+                  number: 80

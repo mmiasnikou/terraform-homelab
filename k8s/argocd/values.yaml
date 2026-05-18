@@ -1,0 +1,44 @@
+global:
+  domain: argocd.k3s.lab
+
+server:
+  # ArgoCD сервер не делает TLS сам — отдаёт http, TLS терминирует nginx-ingress
+  extraArgs:
+    - --insecure
+
+  service:
+    type: ClusterIP
+
+  # Метрики в Prometheus — стандартно, как делали для других компонент
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: kps
+
+# Метрики и для остальных компонент ArgoCD
+controller:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: kps
+
+repoServer:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: kps
+
+# Redis — встроенный, хватит для homelab
+redis:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: kps

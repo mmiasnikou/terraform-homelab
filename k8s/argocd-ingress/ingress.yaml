@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server
+  namespace: argocd
+  annotations:
+    cert-manager.io/cluster-issuer: homelab-ca
+    # Важно для ArgoCD — он ожидает HTTPS-фронтенд, но сам отдаёт HTTP (мы поставили --insecure).
+    # nginx должен проксировать как HTTP к backend, но фронт держать HTTPS.
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - argocd.k3s.lab
+      secretName: argocd-tls
+  rules:
+    - host: argocd.k3s.lab
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocd-server
+                port:
+                  number: 80

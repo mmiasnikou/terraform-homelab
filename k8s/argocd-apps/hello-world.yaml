@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hello-world
+  namespace: argocd
+  # finalizer — чтобы при удалении Application ArgoCD корректно удалил все ресурсы
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/mmiasnikou/terraform-homelab
+    targetRevision: main
+    path: gitops/apps/hello-world
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: hello-world
+  syncPolicy:
+    automated:
+      prune: true       # удалить ресурсы, которые исчезли из git
+      selfHeal: true    # вернуть состояние из git, если кто-то изменил вручную
+    syncOptions:
+      - CreateNamespace=true  # создать namespace если его нет

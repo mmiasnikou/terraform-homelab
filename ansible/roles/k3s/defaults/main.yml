@@ -1,6 +1,6 @@
 ---
 # Версия k3s. Апгрейд = поменять здесь и прогнать плейбук (с serial/drain — TODO).
-k3s_version: "v1.32.11+k3s1"
+k3s_version: "v1.33.12+k3s1"
 k3s_install_url: "https://get.k3s.io"
 
 # Компоненты, отключаемые на control-plane (попадают в config.yaml).

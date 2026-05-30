@@ -1,0 +1,5 @@
+# Managed by Ansible — k3s agent (worker)
+# server и token здесь, а не в env-файле, который install.sh перезаписывает.
+server: "https://{{ k3s_cp_ip }}:6443"
+token: "{{ k3s_node_token }}"
+node-name: "{{ inventory_hostname }}"

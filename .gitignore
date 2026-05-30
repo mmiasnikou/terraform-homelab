@@ -4,31 +4,32 @@
 # .tfstate files
 *.tfstate
 *.tfstate.*
-
 # Crash log files
 crash.log
 crash.*.log
-
 # Exclude all .tfvars files, which are likely to contain sensitive data
 *.tfvars
 *.tfvars.json
-
 # Ignore override files as they are usually used to override resources locally
 override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
-
 # CLI configuration files
 .terraformrc
 terraform.rc
-
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-
 # OS
 .DS_Store
 Thumbs.db
+# terraform plan files и бэкапы
+*.tfplan
+*.tfvars.bak-*
+# скачанные установщики
+get_helm.sh
+# secrets & terraform artifacts
+proxmox/1536

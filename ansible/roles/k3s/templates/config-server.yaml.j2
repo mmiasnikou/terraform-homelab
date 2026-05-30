@@ -1,0 +1,8 @@
+# Managed by Ansible — k3s server (control-plane)
+# Параметры запуска ЗДЕСЬ, а не в аргументах install.sh — чтобы апгрейд их не затирал.
+write-kubeconfig-mode: "{{ k3s_kubeconfig_mode }}"
+node-name: "{{ inventory_hostname }}"
+disable:
+{% for component in k3s_server_disable %}
+  - {{ component }}
+{% endfor %}

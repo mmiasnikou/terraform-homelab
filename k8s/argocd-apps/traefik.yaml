@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    namespace: traefik
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://traefik.github.io/charts
+    chart: traefik
+    targetRevision: 40.2.0
+    helm:
+      valuesObject:
+        ingressClass:
+          enabled: true
+          isDefaultClass: false
+          name: traefik
+        service:
+          type: NodePort
+        ports:
+          web:
+            nodePort: 31080
+          websecure:
+            nodePort: 31443
+        providers:
+          kubernetesIngress:
+            enabled: true
+          kubernetesCRD:
+            enabled: true
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

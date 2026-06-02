@@ -25,5 +25,3 @@ spec:
             enabled: true
           kubernetesCRD:
             enabled: true
-        # Отключаем то, что нам не нужно и расширяет поверхность:
-        providers_gateway: {}   # placeholder, см. ниже

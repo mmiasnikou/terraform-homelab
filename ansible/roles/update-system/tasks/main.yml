@@ -1,0 +1,97 @@
+---
+- name: Ensure phased-rollout override exists (consistent kernel across cluster)
+  ansible.builtin.copy:
+    content: 'APT::Get::Always-Include-Phased-Updates "true";'
+    dest: /etc/apt/apt.conf.d/99-phased-updates
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: Wait for any running apt/dpkg lock to release
+  ansible.builtin.shell: |
+    while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 \
+       || fuser /var/lib/apt/lists/lock >/dev/null 2>&1 \
+       || fuser /var/lib/dpkg/lock >/dev/null 2>&1; do
+      sleep 5
+    done
+  changed_when: false
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 0
+
+- name: Show current kernel
+  ansible.builtin.shell: uname -r
+  register: kernel_before
+  changed_when: false
+
+- name: Upgrade all packages (dist-upgrade)
+  ansible.builtin.apt:
+    upgrade: dist
+    autoremove: yes
+    autoclean: yes
+
+- name: Check if reboot is required
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: reboot_required
+
+- name: Drain node before reboot (only for k3s_workers)
+  delegate_to: localhost
+  become: no
+  ansible.builtin.command: >
+    kubectl drain {{ inventory_hostname }}
+    --ignore-daemonsets
+    --delete-emptydir-data
+    --force
+    --timeout=120s
+  when:
+    - reboot_required.stat.exists
+    - "'k3s_workers' in group_names"
+  register: drain_result
+  failed_when: false
+
+- name: Reboot if needed
+  ansible.builtin.reboot:
+    msg: "Reboot triggered by Ansible update-system role"
+    pre_reboot_delay: 5
+    post_reboot_delay: 30
+    reboot_timeout: 600
+    test_command: uptime
+  when: reboot_required.stat.exists
+
+- name: Show new kernel
+  ansible.builtin.shell: uname -r
+  register: kernel_after
+  changed_when: false
+  when: reboot_required.stat.exists
+
+- name: Print kernel transition
+  ansible.builtin.debug:
+    msg: "Kernel: {{ kernel_before.stdout }} → {{ kernel_after.stdout | default(kernel_before.stdout) }}"
+
+- name: Wait for k3s service to be active after reboot
+  ansible.builtin.systemd:
+    name: "{{ 'k3s' if 'k3s_cp' in group_names else 'k3s-agent' }}"
+    state: started
+  when: reboot_required.stat.exists
+
+- name: Uncordon node after reboot (only k3s_workers)
+  delegate_to: localhost
+  become: no
+  ansible.builtin.command: kubectl uncordon {{ inventory_hostname }}
+  when:
+    - reboot_required.stat.exists
+    - "'k3s_workers' in group_names"
+
+- name: Wait for node to become Ready
+  delegate_to: localhost
+  become: no
+  ansible.builtin.shell: |
+    kubectl get node {{ inventory_hostname }} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+  register: node_ready
+  retries: 30
+  delay: 10
+  until: node_ready.stdout == "True"
+  when: reboot_required.stat.exists

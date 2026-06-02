@@ -1,0 +1,17 @@
+---
+# Обновляем k3s_workers по одному (serial: 1)
+- name: Rolling update workers
+  hosts: k3s_workers
+  serial: 1
+  become: yes
+  gather_facts: yes
+  roles:
+    - update-system
+
+# Control-plane последним
+- name: Update control-plane
+  hosts: k3s_cp
+  become: yes
+  gather_facts: yes
+  roles:
+    - update-system

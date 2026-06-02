@@ -1,64 +1,62 @@
-grafana:
+USER-SUPPLIED VALUES:
+alertmanager:
   enabled: true
-  adminPassword: "labpass2026"
-  service:
-    type: NodePort
-    nodePort: 30030
-  persistence:
-    enabled: true
-    storageClassName: local-path
-    size: 1Gi
-  initChownData:
-    enabled: false
-  resources:
-    requests:
-      memory: "256Mi"
-      cpu: "100m"
-    limits:
-      memory: "512Mi"
-      cpu: "500m"
+grafana:
+  adminPassword: labpass2026
+  enabled: true
   grafana.ini:
     plugins:
       plugin_admin_enabled: false
-
-prometheus:
-  prometheusSpec:
-    retention: 7d
-    resources:
-      requests:
-        memory: "256Mi"
-        cpu: "100m"
-      limits:
-        memory: "512Mi"
-        cpu: "300m"
-    storageSpec:
-      volumeClaimTemplate:
-        spec:
-          storageClassName: local-path
-          accessModes: ["ReadWriteOnce"]
-          resources:
-            requests:
-              storage: 5Gi
-    serviceMonitorSelectorNilUsesHelmValues: false
-    podMonitorSelectorNilUsesHelmValues: false
-
-alertmanager:
-  enabled: true
-
-prometheusOperator:
+  initChownData:
+    enabled: false
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClassName: local-path
   resources:
-    requests:
-      memory: "64Mi"
-      cpu: "50m"
     limits:
-      memory: "128Mi"
-      cpu: "200m"
-
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  service:
+    nodePort: 30030
+    type: NodePort
 kubeControllerManager:
-  enabled: false
-kubeScheduler:
-  enabled: false
-kubeProxy:
   enabled: false
 kubeEtcd:
   enabled: false
+kubeProxy:
+  enabled: false
+kubeScheduler:
+  enabled: false
+prometheus:
+  prometheusSpec:
+    podMonitorSelectorNilUsesHelmValues: false
+    resources:
+      limits:
+        cpu: 300m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    retention: 7d
+    serviceMonitorSelectorNilUsesHelmValues: false
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 5Gi
+          storageClassName: local-path
+prometheusOperator:
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi

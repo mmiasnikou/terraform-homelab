@@ -2,5 +2,19 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
+  ],
+  "dependencyDashboard": true,
+  "prConcurrentLimit": 3,
+  "prHourlyLimit": 2,
+  "schedule": [
+    "after 2am and before 6am on monday"
+  ],
+  "timezone": "Europe/Minsk",
+  "packageRules": [
+    {
+      "description": "Major updates require approval in the Dependency Dashboard, no automatic PRs",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    }
   ]
 }

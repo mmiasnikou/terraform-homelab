@@ -1,7 +1,6 @@
-# App-of-apps: корневой Application, управляющий всеми остальными
-# Application-манифестами в каталоге k8s/argocd-apps/.
-# Правка любого манифеста в этом каталоге → коммит → ArgoCD применяет.
-# Ручной kubectl apply больше не нужен.
+# App-of-apps: корневой Application, управляющий остальными
+# Application-манифестами в k8s/argocd-apps/.
+# Правка манифеста в каталоге → коммит → ArgoCD применяет автоматически.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -16,8 +15,6 @@ spec:
     repoURL: https://github.com/mmiasnikou/terraform-homelab
     targetRevision: main
     path: k8s/argocd-apps
-    directory:
-      recurse: false
   syncPolicy:
     automated:
       prune: true

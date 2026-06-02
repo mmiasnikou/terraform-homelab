@@ -8,7 +8,7 @@ metadata:
     # для всех hosts из tls секции ниже, используя ClusterIssuer "homelab-ca"
     cert-manager.io/cluster-issuer: homelab-ca
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   tls:
     - hosts:
         - grafana.k3s.lab

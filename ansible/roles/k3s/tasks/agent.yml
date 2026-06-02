@@ -1,0 +1,56 @@
+---
+- name: Resolve cp token and IP (from control-plane play)
+  set_fact:
+    k3s_node_token: "{{ hostvars[groups['k3s_cp'][0]]['k3s_token']['content'] | b64decode | trim }}"
+    k3s_cp_ip: "{{ hostvars[groups['k3s_cp'][0]]['ansible_default_ipv4']['address'] }}"
+
+- name: Check if node is already registered
+  command: k3s kubectl get node {{ inventory_hostname }}
+  delegate_to: "{{ groups['k3s_cp'][0] }}"
+  register: node_registered
+  failed_when: false
+  changed_when: false
+
+- name: Drain node before upgrade
+  command: >
+    k3s kubectl drain {{ inventory_hostname }}
+    --ignore-daemonsets --delete-emptydir-data --timeout=120s
+  delegate_to: "{{ groups['k3s_cp'][0] }}"
+  when: node_registered.rc == 0
+  changed_when: true
+
+- name: Ensure /etc/rancher/k3s exists
+  file:
+    path: /etc/rancher/k3s
+    state: directory
+    mode: "0755"
+
+- name: Template k3s agent config.yaml
+  template:
+    src: config-agent.yaml.j2
+    dest: /etc/rancher/k3s/config.yaml
+    mode: "0600"
+
+- name: Install or upgrade k3s agent
+  shell: |
+    curl -sfL {{ k3s_install_url }} | INSTALL_K3S_VERSION={{ k3s_version }} INSTALL_K3S_EXEC=agent sh -s -
+  register: k3s_agent_install
+  changed_when: "'No change detected' not in k3s_agent_install.stdout"
+
+- name: Restart k3s agent
+  systemd:
+    name: k3s-agent
+    state: restarted
+    daemon_reload: yes
+  when: k3s_agent_install.changed
+
+- name: Wait for node to be Ready after upgrade
+  command: k3s kubectl wait --for=condition=Ready node/{{ inventory_hostname }} --timeout=150s
+  delegate_to: "{{ groups['k3s_cp'][0] }}"
+  changed_when: false
+
+- name: Uncordon node
+  command: k3s kubectl uncordon {{ inventory_hostname }}
+  delegate_to: "{{ groups['k3s_cp'][0] }}"
+  when: node_registered.rc == 0
+  changed_when: true

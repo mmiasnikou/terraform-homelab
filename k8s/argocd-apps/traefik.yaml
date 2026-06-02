@@ -14,8 +14,6 @@ spec:
     targetRevision: 40.2.0
     helm:
       valuesObject:
-        # Traefik на стандартных 80/443 через k3s ServiceLB (klipper).
-        # nginx доживает на 30080/30443 до Фазы 4.
         ingressClass:
           enabled: true
           isDefaultClass: true

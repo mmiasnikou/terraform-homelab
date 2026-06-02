@@ -1,23 +1,12 @@
 ---
+# Воркер: только привести ноду к целевому состоянию.
+# Оркестрация (drain/uncordon/serial) живёт в плейбуке, не здесь.
+
 - name: Resolve cp token and IP (from control-plane play)
   set_fact:
     k3s_node_token: "{{ hostvars[groups['k3s_cp'][0]]['k3s_token']['content'] | b64decode | trim }}"
     k3s_cp_ip: "{{ hostvars[groups['k3s_cp'][0]]['ansible_default_ipv4']['address'] }}"
-
-- name: Check if node is already registered
-  command: k3s kubectl get node {{ inventory_hostname }}
-  delegate_to: "{{ groups['k3s_cp'][0] }}"
-  register: node_registered
-  failed_when: false
-  changed_when: false
-
-- name: Drain node before upgrade
-  command: >
-    k3s kubectl drain {{ inventory_hostname }}
-    --ignore-daemonsets --delete-emptydir-data --timeout=120s
-  delegate_to: "{{ groups['k3s_cp'][0] }}"
-  when: node_registered.rc == 0
-  changed_when: true
+  when: k3s_node_token is not defined
 
 - name: Ensure /etc/rancher/k3s exists
   file:
@@ -43,14 +32,3 @@
     state: restarted
     daemon_reload: yes
   when: k3s_agent_install.changed
-
-- name: Wait for node to be Ready after upgrade
-  command: k3s kubectl wait --for=condition=Ready node/{{ inventory_hostname }} --timeout=150s
-  delegate_to: "{{ groups['k3s_cp'][0] }}"
-  changed_when: false
-
-- name: Uncordon node
-  command: k3s kubectl uncordon {{ inventory_hostname }}
-  delegate_to: "{{ groups['k3s_cp'][0] }}"
-  when: node_registered.rc == 0
-  changed_when: true

@@ -1,4 +1,17 @@
 ---
+# Hostname ОС = имя ноды. Безопасно: k3s держит идентичность через
+# node-name в config.yaml, hostname на имя ноды в кластере не влияет.
+- name: Set hostname to match node name
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Ensure /etc/hosts has correct 127.0.1.1 entry
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.1\.1'
+    line: "127.0.1.1 {{ inventory_hostname }}"
+
+# Дальше — по роли ноды
 - import_tasks: server.yml
   when: inventory_hostname in groups['k3s_cp']
 - import_tasks: agent.yml

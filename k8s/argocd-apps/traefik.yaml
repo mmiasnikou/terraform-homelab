@@ -20,6 +20,10 @@ spec:
           name: traefik
         service:
           type: NodePort
+          # Запрещаем k3s ServiceLB (klipper) навешивать LoadBalancer и
+          # занимать хостовые 80/443 — Traefik должен жить строго на NodePort.
+          annotations:
+            svccontroller.k3s.cattle.io/enablelb: "false"
         ports:
           web:
             nodePort: 31080

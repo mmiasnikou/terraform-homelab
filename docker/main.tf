@@ -14,7 +14,7 @@ provider "docker" {
 }
 
 resource "docker_image" "nginx" {
-  name         = "nginx:1.27-alpine"
+  name         = "nginx:1.31-alpine"
   keep_locally = false
 }
 

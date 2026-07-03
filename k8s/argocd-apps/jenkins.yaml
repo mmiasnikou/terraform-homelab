@@ -1,0 +1,68 @@
+# Jenkins CI — helm chart with inline values (same style as traefik.yaml).
+# CI (build/test) here; CD stays with ArgoCD.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jenkins
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    namespace: jenkins
+    server: https://kubernetes.default.svc
+  source:
+    repoURL: https://charts.jenkins.io
+    chart: jenkins
+    targetRevision: 5.9.32
+    helm:
+      valuesObject:
+        controller:
+          image:
+            tag: "lts-jdk17"
+          jenkinsUrl: "https://jenkins.k3s.lab"
+          admin:
+            existingSecret: jenkins-admin
+          installPlugins:
+            - kubernetes
+            - workflow-aggregator
+            - git
+            - configuration-as-code
+            - job-dsl
+          JCasC:
+            defaultConfig: true
+            configScripts:
+              welcome: |
+                jenkins:
+                  systemMessage: "Homelab CI - managed by JCasC"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1024Mi"
+            limits:
+              memory: "2048Mi"
+          ingress:
+            enabled: true
+            ingressClassName: traefik
+            hostName: jenkins.k3s.lab
+            annotations:
+              cert-manager.io/cluster-issuer: homelab-ca
+            tls:
+              - secretName: jenkins-tls
+                hosts:
+                  - jenkins.k3s.lab
+        persistence:
+          enabled: true
+          storageClass: local-path
+          size: 20Gi
+        rbac:
+          create: true
+        serviceAccount:
+          create: true
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

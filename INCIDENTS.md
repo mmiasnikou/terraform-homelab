@@ -130,8 +130,9 @@ once. This was later proven on the 1.35.5 → 1.36.1 upgrade, which ran clean
 
 ---
 
-## How to use these in an interview
+## Why this file exists
 
-Pick one, tell it in ~90 seconds: **what broke, how you found it, why it happened,
-what you did, what you changed so it can't recur.** The last part (prevention) is
-what separates SRE thinking from "I restarted it."
+Running infrastructure without writing failures down means solving the
+same problem twice. Every entry here ends with prevention, because that
+is the only part that changes future outcomes: a fix is temporary, a
+codified prevention is not.

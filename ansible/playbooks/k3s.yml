@@ -4,14 +4,45 @@
   hosts: k3s_cp
   become: true
   gather_facts: yes
+
+  pre_tasks:
+    - name: Backup sqlite datastore
+      command: >
+        cp -a /var/lib/rancher/k3s/server/db
+        /var/lib/rancher/k3s/server/db.bak-{{ ansible_date_time.date }}
+      args:
+        creates: "/var/lib/rancher/k3s/server/db.bak-{{ ansible_date_time.date }}"
+
   roles:
     - k3s
+
+  post_tasks:
+    - name: Wait for API server to come back
+      command: kubectl get --raw /readyz
+      delegate_to: localhost
+      become: false
+      register: readyz
+      until: readyz.rc == 0
+      retries: 30
+      delay: 5
+      changed_when: false
+
+    - name: Verify control-plane version
+      command: kubectl get node {{ inventory_hostname }} -o jsonpath={.status.nodeInfo.kubeletVersion}
+      delegate_to: localhost
+      become: false
+      register: cp_ver
+      until: cp_ver.stdout == k3s_version
+      retries: 20
+      delay: 10
+      changed_when: false
 
 # PLAY 2 — собрать token/cp-ip для воркеров
 - name: Gather k3s join facts for workers
   hosts: k3s_workers
   become: true
   gather_facts: yes
+
   tasks:
     - name: Read node-token from control-plane
       slurp:
@@ -19,10 +50,13 @@
       register: k3s_token
       delegate_to: "{{ groups['k3s_cp'][0] }}"
       run_once: true
+      no_log: true
+
     - name: Set join facts
       set_fact:
         k3s_node_token: "{{ k3s_token['content'] | b64decode | trim }}"
         k3s_cp_ip: "{{ hostvars[groups['k3s_cp'][0]]['ansible_default_ipv4']['address'] }}"
+      no_log: true
 
 # PLAY 3 — WORKERS по одному, с drain/uncordon
 - name: Upgrade k3s workers one at a time
@@ -31,6 +65,7 @@
   gather_facts: yes
   serial: 1
   max_fail_percentage: 0
+
   pre_tasks:
     - name: Check if node is already registered
       command: kubectl get node {{ inventory_hostname }}
@@ -39,15 +74,27 @@
       register: node_registered
       failed_when: false
       changed_when: false
-    - name: Drain node before upgrade
-      command: >
-        kubectl drain {{ inventory_hostname }}
-        --ignore-daemonsets --delete-emptydir-data --timeout=120s
-      delegate_to: localhost
-      become: false
-      when: node_registered.rc == 0
+
+    - block:
+        - name: Drain node before upgrade
+          command: >
+            kubectl drain {{ inventory_hostname }}
+            --ignore-daemonsets --delete-emptydir-data --timeout=300s
+          delegate_to: localhost
+          become: false
+          when: node_registered.rc == 0
+      rescue:
+        - name: Uncordon after failed drain
+          command: kubectl uncordon {{ inventory_hostname }}
+          delegate_to: localhost
+          become: false
+        - name: Abort run
+          fail:
+            msg: "drain failed on {{ inventory_hostname }} — node left schedulable"
+
   roles:
     - k3s
+
   post_tasks:
     - name: Wait for node to report target version
       command: kubectl get node {{ inventory_hostname }} -o jsonpath={.status.nodeInfo.kubeletVersion}
@@ -57,8 +104,23 @@
       until: node_ver.stdout == k3s_version
       retries: 20
       delay: 10
+      changed_when: false
+
     - name: Uncordon node
       command: kubectl uncordon {{ inventory_hostname }}
       delegate_to: localhost
       become: false
       when: node_registered.rc == 0
+
+    - name: Wait for workloads to settle
+      shell: |
+        kubectl get pods -A --field-selector spec.nodeName={{ inventory_hostname }} \
+          -o jsonpath='{range .items[*]}{.status.phase}{"\n"}{end}' \
+          | grep -v Running | grep -v Succeeded | wc -l
+      delegate_to: localhost
+      become: false
+      register: unsettled
+      until: unsettled.stdout | int == 0
+      retries: 30
+      delay: 10
+      changed_when: false
